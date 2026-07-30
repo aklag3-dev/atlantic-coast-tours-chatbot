@@ -6,7 +6,6 @@ window.ACTApp = (function () {
     history: [],
     sending: false,
     infoOpen: false,
-    chatOpen: false,
     lastFocused: null,
     tours: [],
     locationEnabled: false,
@@ -28,9 +27,7 @@ window.ACTApp = (function () {
     bindComposer();
     bindInfo();
     bindLocation();
-    bindChat();
     renderWelcome();
-    renderLandingTours();
   }
 
   function cacheDom() {
@@ -49,11 +46,6 @@ window.ACTApp = (function () {
     els.suggestionsArea = $('suggestions-area');
     els.personaBtn = $('persona-btn');
     els.darkBtn = $('dark-btn');
-    els.chatBubble = $('chat-bubble');
-    els.chatBubbleClose = $('chat-bubble-close');
-    els.chatOverlay = $('chat-overlay');
-    els.panelCloseBtn = $('panel-close-btn');
-    els.footerChatLink = $('footer-chat-link');
   }
 
   function checkAiStatus() {
@@ -154,87 +146,6 @@ window.ACTApp = (function () {
 
   function bindLocation() {
     els.locBtn.addEventListener('click', toggleLocation);
-  }
-
-  function bindChat() {
-    if (els.chatBubble) {
-      els.chatBubble.addEventListener('click', openChat);
-    }
-    if (els.chatBubbleClose) {
-      els.chatBubbleClose.addEventListener('click', closeChat);
-    }
-    if (els.panelCloseBtn) {
-      els.panelCloseBtn.addEventListener('click', closeChat);
-    }
-    if (els.chatOverlay) {
-      els.chatOverlay.addEventListener('click', function (e) {
-        if (e.target === els.chatOverlay) closeChat();
-      });
-    }
-    if (els.footerChatLink) {
-      els.footerChatLink.addEventListener('click', function (e) {
-        e.preventDefault();
-        openChat();
-      });
-    }
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && state.chatOpen) closeChat();
-    });
-  }
-
-  function openChat() {
-    if (state.chatOpen) return;
-    state.chatOpen = true;
-    state.lastFocused = document.activeElement;
-    els.chatOverlay.classList.add('open');
-    els.chatOverlay.setAttribute('aria-hidden', 'false');
-    if (els.chatBubble) els.chatBubble.style.display = 'none';
-    if (els.chatBubbleClose) els.chatBubbleClose.style.display = 'none';
-    requestAnimationFrame(function () {
-      if (els.composerInput) els.composerInput.focus();
-    });
-  }
-
-  function closeChat() {
-    if (!state.chatOpen) return;
-    state.chatOpen = false;
-    els.chatOverlay.classList.remove('open');
-    els.chatOverlay.setAttribute('aria-hidden', 'true');
-    if (els.chatBubble) els.chatBubble.style.display = '';
-    if (els.chatBubbleClose) els.chatBubbleClose.style.display = '';
-    if (state.lastFocused && state.lastFocused.focus) {
-      state.lastFocused.focus();
-    }
-  }
-
-  function renderLandingTours() {
-    var container = $('tour-cards');
-    if (!container) return;
-    window.ACTTours.fetchTours().then(function (tours) {
-      if (!tours || tours.length === 0) {
-        container.innerHTML = '<div class="tour-card loading-card">No tours available right now. Check back soon!</div>';
-        return;
-      }
-      var html = '';
-      var count = Math.min(tours.length, 4);
-      for (var i = 0; i < count; i++) {
-        var t = tours[i];
-        var desc = (t.description || '').substring(0, 90);
-        if ((t.description || '').length > 90) desc += '...';
-        html += '<div class="tour-card" tabindex="0">' +
-          '<h3>' + escapeText(t.tour_name) + '</h3>' +
-          '<span class="tour-badge">' + escapeText(t.category || '') + '</span>' +
-          '<p class="tour-desc">' + escapeText(desc) + '</p>' +
-          '<div class="tour-meta">' +
-            '<span>From EUR ' + escapeText(t.price_eur || '') + '</span>' +
-            '<span>' + escapeText(t.duration_hours || '') + ' hours</span>' +
-          '</div>' +
-        '</div>';
-      }
-      container.innerHTML = html;
-    }).catch(function () {
-      container.innerHTML = '<div class="tour-card loading-card">Unable to load tours. Please try again later.</div>';
-    });
   }
 
   function toggleLocation() {
