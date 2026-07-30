@@ -62,16 +62,17 @@ a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-r
 }
 
 .app {
-  max-width: 480px;
+  max-width: 960px;
   margin: 0 auto;
   background: var(--bg-chat);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
+  border: 1px solid var(--border);
 }
 
-@media (min-width: 481px) {
+@media (min-width: 961px) {
   body { padding: 24px 16px 32px; }
   .app {
     min-height: 760px;
