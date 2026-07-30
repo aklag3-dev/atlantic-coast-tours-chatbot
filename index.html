@@ -33,6 +33,8 @@
       </div>
       <div class="header-end">
         <span class="live-dot" aria-label="AI assistant online" title="AI assistant online"></span>
+        <button class="header-toggle" id="persona-btn" type="button" aria-label="Toggle Fiona persona">👔</button>
+        <button class="header-toggle" id="dark-btn" type="button" aria-label="Toggle dark mode">☀️</button>
         <button class="icon-btn" id="info-btn" type="button" aria-label="About this assistant">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10"/>
@@ -109,32 +111,6 @@
         <div class="info-section">
           <h3>AI Status</h3>
           <p id="status-line">Checking...</p>
-        </div>
-
-        <div class="info-section">
-          <h3>Settings</h3>
-
-          <div class="toggle-row">
-            <div>
-              <label for="persona-toggle">Fiona persona</label>
-              <p class="toggle-desc">Bubbly, fun, slightly sassy Irish tour guide personality</p>
-            </div>
-            <div class="toggle-switch">
-              <input type="checkbox" id="persona-toggle">
-              <label class="toggle-slider" for="persona-toggle" aria-label="Toggle Fiona persona"></label>
-            </div>
-          </div>
-
-          <div class="toggle-row">
-            <div>
-              <label for="dark-toggle">Dark mode</label>
-              <p class="toggle-desc">Switch between light and dark appearance</p>
-            </div>
-            <div class="toggle-switch">
-              <input type="checkbox" id="dark-toggle">
-              <label class="toggle-slider" for="dark-toggle" aria-label="Toggle dark mode"></label>
-            </div>
-          </div>
         </div>
 
         <div class="info-section">

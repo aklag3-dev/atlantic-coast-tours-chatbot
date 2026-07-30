@@ -43,8 +43,8 @@ window.ACTApp = (function () {
     els.locLabel = $('loc-label');
     els.locError = $('loc-error');
     els.suggestionsArea = $('suggestions-area');
-    els.personaToggle = $('persona-toggle');
-    els.darkToggle = $('dark-toggle');
+    els.personaBtn = $('persona-btn');
+    els.darkBtn = $('dark-btn');
   }
 
   function checkAiStatus() {
@@ -53,6 +53,40 @@ window.ACTApp = (function () {
 
   function bindHeader() {
     els.infoBtn.addEventListener('click', openInfo);
+
+    // Persona toggle
+    if (els.personaBtn) {
+      var savedPersona = localStorage.getItem('act-persona');
+      if (savedPersona === 'true') {
+        state.personaEnabled = true;
+        els.personaBtn.textContent = '\u{1F9D1}\u200D\u{1F9B0}';
+        els.personaBtn.classList.add('active');
+      }
+      els.personaBtn.addEventListener('click', function () {
+        state.personaEnabled = !state.personaEnabled;
+        els.personaBtn.textContent = state.personaEnabled ? '\u{1F9D1}\u200D\u{1F9B0}' : '\u{1F454}';
+        els.personaBtn.classList.toggle('active', state.personaEnabled);
+        localStorage.setItem('act-persona', state.personaEnabled);
+      });
+    }
+
+    // Dark mode toggle
+    if (els.darkBtn) {
+      var savedDark = localStorage.getItem('act-dark');
+      if (savedDark === 'true') {
+        state.darkEnabled = true;
+        els.darkBtn.textContent = '\u{1F319}';
+        els.darkBtn.classList.add('active');
+        document.documentElement.classList.add('dark');
+      }
+      els.darkBtn.addEventListener('click', function () {
+        state.darkEnabled = !state.darkEnabled;
+        els.darkBtn.textContent = state.darkEnabled ? '\u{1F319}' : '\u{2600}\uFE0F';
+        els.darkBtn.classList.toggle('active', state.darkEnabled);
+        document.documentElement.classList.toggle('dark', state.darkEnabled);
+        localStorage.setItem('act-dark', state.darkEnabled);
+      });
+    }
   }
 
   function bindComposer() {
@@ -87,34 +121,6 @@ window.ACTApp = (function () {
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && state.infoOpen) closeInfo();
     });
-
-    // Persona toggle
-    if (els.personaToggle) {
-      var savedPersona = localStorage.getItem('act-persona');
-      if (savedPersona === 'true') {
-        state.personaEnabled = true;
-        els.personaToggle.checked = true;
-      }
-      els.personaToggle.addEventListener('change', function () {
-        state.personaEnabled = els.personaToggle.checked;
-        localStorage.setItem('act-persona', state.personaEnabled);
-      });
-    }
-
-    // Dark mode toggle
-    if (els.darkToggle) {
-      var savedDark = localStorage.getItem('act-dark');
-      if (savedDark === 'true') {
-        state.darkEnabled = true;
-        els.darkToggle.checked = true;
-        document.querySelector('.app').classList.add('dark');
-      }
-      els.darkToggle.addEventListener('change', function () {
-        state.darkEnabled = els.darkToggle.checked;
-        localStorage.setItem('act-dark', state.darkEnabled);
-        document.querySelector('.app').classList.toggle('dark', state.darkEnabled);
-      });
-    }
   }
 
   function openInfo() {
