@@ -365,7 +365,10 @@ window.ACTApp = (function () {
 
   function scrollToBottom() {
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    els.thread.scrollIntoView({ block: 'end', behavior: reduce ? 'auto' : 'smooth' });
+    var behavior = reduce ? 'auto' : 'smooth';
+    requestAnimationFrame(function () {
+      els.thread.scrollTo({ top: els.thread.scrollHeight, behavior: behavior });
+    });
   }
 
   function escapeText(s) {
