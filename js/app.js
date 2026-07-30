@@ -12,7 +12,9 @@ window.ACTApp = (function () {
     userLocation: null,
     locationLoading: false,
     locationError: null,
-    aiConfigured: false
+    aiConfigured: false,
+    personaEnabled: false,
+    darkEnabled: false
   };
 
   function $(id) { return document.getElementById(id); }
@@ -41,6 +43,8 @@ window.ACTApp = (function () {
     els.locLabel = $('loc-label');
     els.locError = $('loc-error');
     els.suggestionsArea = $('suggestions-area');
+    els.personaToggle = $('persona-toggle');
+    els.darkToggle = $('dark-toggle');
   }
 
   function checkAiStatus() {
@@ -83,6 +87,34 @@ window.ACTApp = (function () {
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && state.infoOpen) closeInfo();
     });
+
+    // Persona toggle
+    if (els.personaToggle) {
+      var savedPersona = localStorage.getItem('act-persona');
+      if (savedPersona === 'true') {
+        state.personaEnabled = true;
+        els.personaToggle.checked = true;
+      }
+      els.personaToggle.addEventListener('change', function () {
+        state.personaEnabled = els.personaToggle.checked;
+        localStorage.setItem('act-persona', state.personaEnabled);
+      });
+    }
+
+    // Dark mode toggle
+    if (els.darkToggle) {
+      var savedDark = localStorage.getItem('act-dark');
+      if (savedDark === 'true') {
+        state.darkEnabled = true;
+        els.darkToggle.checked = true;
+        document.querySelector('.app').classList.add('dark');
+      }
+      els.darkToggle.addEventListener('change', function () {
+        state.darkEnabled = els.darkToggle.checked;
+        localStorage.setItem('act-dark', state.darkEnabled);
+        document.querySelector('.app').classList.toggle('dark', state.darkEnabled);
+      });
+    }
   }
 
   function openInfo() {
@@ -523,8 +555,16 @@ window.ACTApp = (function () {
 
   function policyAsContext() {
     var cats = window.ACTCompany.categories;
+    var persona = window.ACTCompany.persona;
+
+    // Persona block at the top if enabled
+    var personaBlock = '';
+    if (state.personaEnabled && persona) {
+      personaBlock = 'PERSONA: ' + persona.demeanor + '\n\n';
+    }
     var tours = state.tours || [];
     var lines = [];
+    if (personaBlock) lines.push(personaBlock);
     lines.push('ATLANTIC COAST TOURS — COMPANY INFORMATION:');
     for (var i = 0; i < cats.length; i++) {
       var c = cats[i];

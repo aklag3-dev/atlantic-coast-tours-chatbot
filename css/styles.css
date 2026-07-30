@@ -9,6 +9,8 @@
   --primary-dark: #145555;
   --primary-ink: #FFFFFF;
   --accent: #D4943E;
+  --accent-light: rgba(212,148,62,0.10);
+  --accent-border: rgba(212,148,62,0.45);
   --success: #2E7D5C;
   --focus: #1A1F2E;
   --bg-chat: #FFFFFF;
@@ -18,6 +20,11 @@
   --user-text: #FFFFFF;
   --placeholder: #B0B8C1;
   --green: #34D399;
+  --shadow-color: rgba(26,31,46,0.04);
+  --shadow-msg-color: rgba(0,0,0,0.06);
+  --shadow-input-color: rgba(0,0,0,0.06);
+  --shadow-2-color: rgba(26,31,46,0.10);
+  --modal-backdrop: rgba(0,0,0,0.4);
 
   --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-display: 'Fraunces', Georgia, 'Times New Roman', Times, serif;
@@ -27,12 +34,41 @@
   --r-3: 18px;
   --r-4: 24px;
 
-  --shadow-sm: 0 1px 2px rgba(26,31,46,0.04);
-  --shadow-msg: 0 1px 4px rgba(0,0,0,0.06);
-  --shadow-input: 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-2: 0 8px 24px rgba(26,31,46,0.10);
+  --shadow-sm: 0 1px 2px var(--shadow-color);
+  --shadow-msg: 0 1px 4px var(--shadow-msg-color);
+  --shadow-input: 0 2px 8px var(--shadow-input-color);
+  --shadow-2: 0 8px 24px var(--shadow-2-color);
 
   --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.app.dark {
+  --ink: #E5E7EB;
+  --ink-2: #D1D5DB;
+  --muted: #9CA3AF;
+  --surface: #1A1D23;
+  --surface-2: #24272F;
+  --border: #374151;
+  --primary: #2D8F8F;
+  --primary-dark: #3AA8A8;
+  --primary-ink: #FFFFFF;
+  --accent: #E8A33D;
+  --accent-light: rgba(232,163,61,0.12);
+  --accent-border: rgba(232,163,61,0.40);
+  --success: #34D399;
+  --focus: #E5E7EB;
+  --bg-chat: #111318;
+  --msg-bg: #1A1D23;
+  --msg-border: #2D2F36;
+  --user-bg: #2D8F8F;
+  --user-text: #FFFFFF;
+  --placeholder: #6B7280;
+  --green: #34D399;
+  --shadow-color: rgba(0,0,0,0.3);
+  --shadow-msg-color: rgba(0,0,0,0.3);
+  --shadow-input-color: rgba(0,0,0,0.4);
+  --shadow-2-color: rgba(0,0,0,0.5);
+  --modal-backdrop: rgba(0,0,0,0.7);
 }
 
 * { box-sizing: border-box; }
@@ -277,8 +313,8 @@ a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-r
   gap: 4px;
   margin: 4px 0 6px;
   padding: 10px 14px;
-  background: linear-gradient(180deg, rgba(212,148,62,0.10), rgba(212,148,62,0.04));
-  border: 1px solid rgba(212,148,62,0.45);
+  background: linear-gradient(180deg, var(--accent-light), transparent);
+  border: 1px solid var(--accent-border);
   border-radius: var(--r-1);
   max-width: 88%;
   align-self: flex-start;
@@ -437,7 +473,7 @@ a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-r
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: var(--modal-backdrop);
   z-index: 50;
   display: flex;
   align-items: center;
@@ -546,6 +582,69 @@ a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-r
   color: var(--placeholder);
 }
 .info-footer p + p { margin-top: 2px; }
+
+/* ---------- Toggle Row ---------- */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+.toggle-row label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  flex: 1;
+}
+.toggle-row .toggle-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 2px 0 0;
+}
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.toggle-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 200ms;
+}
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  transition: transform 200ms, background 200ms;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--primary);
+}
+.toggle-switch input:checked + .toggle-slider::after {
+  transform: translateX(20px);
+}
+.toggle-switch input:focus-visible + .toggle-slider {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
 
 /* ---------- Motion ---------- */
 @media (prefers-reduced-motion: reduce) {
