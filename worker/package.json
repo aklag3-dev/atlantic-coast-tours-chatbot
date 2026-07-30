@@ -1,0 +1,14 @@
+{
+  "name": "act-chatbot-proxy",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev --remote",
+    "tail": "wrangler tail",
+    "secret": "wrangler secret put GEMINI_API_KEY"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
