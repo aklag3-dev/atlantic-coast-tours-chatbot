@@ -57,7 +57,7 @@ function buildPayload(userInput, history, systemPrompt) {
     contents: contents,
     generationConfig: {
       temperature: 0.3,
-      maxOutputTokens: 500
+      maxOutputTokens: 1024
     }
   };
 }
