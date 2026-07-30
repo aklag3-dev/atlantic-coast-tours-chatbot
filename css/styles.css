@@ -581,6 +581,20 @@ html.dark .header-toggle.active { background: rgba(58,168,168,0.15); }
   line-height: 1.5;
   margin: 0;
 }
+.info-section .disclosure {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--r-1);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.info-section .disclosure strong {
+  font-weight: 600;
+  color: var(--ink);
+}
 
 .contact-line {
   font-size: 13px;
