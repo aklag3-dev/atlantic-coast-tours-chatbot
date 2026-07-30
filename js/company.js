@@ -225,6 +225,6 @@ window.ACTCompany = {
 
   scopeNotice: {
     title: "Beyond my tour knowledge",
-    body: "This question goes beyond the tour information I have loaded. The answer below comes from my general AI assistant, not from our live tour database. For the most accurate information, please contact us directly."
+    body: "Please note that my role is primarily to answer questions about Atlantic Coast Tour packages. Non-tour related answers cannot be guaranteed by Atlantic Coast Tours."
   }
 };

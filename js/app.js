@@ -5,18 +5,25 @@ window.ACTApp = (function () {
   var state = {
     history: [],
     sending: false,
-    settingsOpen: false,
+    infoOpen: false,
     lastFocused: null,
-    tours: []
+    tours: [],
+    locationEnabled: false,
+    userLocation: null,
+    locationLoading: false,
+    locationError: null,
+    aiConfigured: false
   };
 
   function $(id) { return document.getElementById(id); }
 
   function init() {
     cacheDom();
+    checkAiStatus();
     bindHeader();
     bindComposer();
-    bindSettings();
+    bindInfo();
+    bindLocation();
     renderWelcome();
   }
 
@@ -25,17 +32,23 @@ window.ACTApp = (function () {
     els.composerInput = $('composer-input');
     els.composerForm = $('composer-form');
     els.sendBtn = $('send-btn');
-    els.gearBtn = $('gear-btn');
-    els.settingsOverlay = $('settings-overlay');
-    els.settingsPanel = $('settings-panel');
-    els.closeSettingsBtn = $('close-settings-btn');
+    els.infoBtn = $('info-btn');
+    els.infoOverlay = $('info-overlay');
+    els.infoPanel = $('info-panel');
+    els.infoCloseBtn = $('info-close-btn');
     els.statusLine = $('status-line');
-    els.greeting = $('greeting-line');
-    els.chatTitle = $('chat-title');
+    els.locBtn = $('loc-btn');
+    els.locLabel = $('loc-label');
+    els.locError = $('loc-error');
+    els.suggestionsArea = $('suggestions-area');
+  }
+
+  function checkAiStatus() {
+    state.aiConfigured = !!(window.ACTGemini && window.ACTGemini.isConfigured());
   }
 
   function bindHeader() {
-    els.gearBtn.addEventListener('click', openSettings);
+    els.infoBtn.addEventListener('click', openInfo);
   }
 
   function bindComposer() {
@@ -46,7 +59,8 @@ window.ACTApp = (function () {
     els.composerInput.addEventListener('input', function () {
       var has = els.composerInput.value.trim().length > 0;
       els.sendBtn.disabled = !has;
-      els.sendBtn.style.opacity = has ? '1' : '0.5';
+      els.sendBtn.style.opacity = has ? '1' : '0.3';
+      autoResizeInput();
     });
     els.composerInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -56,38 +70,111 @@ window.ACTApp = (function () {
     });
   }
 
-  function bindSettings() {
-    els.closeSettingsBtn.addEventListener('click', closeSettings);
-    els.settingsOverlay.addEventListener('click', function (e) {
-      if (e.target === els.settingsOverlay) closeSettings();
+  function autoResizeInput() {
+    els.composerInput.style.height = 'auto';
+    els.composerInput.style.height = Math.min(els.composerInput.scrollHeight, 120) + 'px';
+  }
+
+  function bindInfo() {
+    els.infoCloseBtn.addEventListener('click', closeInfo);
+    els.infoOverlay.addEventListener('click', function (e) {
+      if (e.target === els.infoOverlay) closeInfo();
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && state.settingsOpen) closeSettings();
+      if (e.key === 'Escape' && state.infoOpen) closeInfo();
     });
   }
 
-  function openSettings() {
-    state.settingsOpen = true;
+  function openInfo() {
+    state.infoOpen = true;
     state.lastFocused = document.activeElement;
-    var app = document.querySelector('.app');
-    if (app) app.setAttribute('inert', '');
     if (els.statusLine) {
       els.statusLine.textContent = window.ACTGemini ? window.ACTGemini.statusLabel() : 'AI fallback: off';
     }
-    els.settingsOverlay.classList.add('open');
-    els.settingsOverlay.setAttribute('aria-hidden', 'false');
+    els.infoOverlay.classList.add('open');
+    els.infoOverlay.setAttribute('aria-hidden', 'false');
     requestAnimationFrame(function () {
-      els.closeSettingsBtn.focus();
+      els.infoCloseBtn.focus();
     });
   }
 
-  function closeSettings() {
-    state.settingsOpen = false;
-    els.settingsOverlay.classList.remove('open');
-    els.settingsOverlay.setAttribute('aria-hidden', 'true');
-    var app = document.querySelector('.app');
-    if (app) app.removeAttribute('inert');
+  function closeInfo() {
+    state.infoOpen = false;
+    els.infoOverlay.classList.remove('open');
+    els.infoOverlay.setAttribute('aria-hidden', 'true');
     if (state.lastFocused && state.lastFocused.focus) state.lastFocused.focus();
+  }
+
+  function bindLocation() {
+    els.locBtn.addEventListener('click', toggleLocation);
+  }
+
+  function toggleLocation() {
+    if (state.locationEnabled) {
+      state.locationEnabled = false;
+      state.userLocation = null;
+      state.locationError = null;
+      updateLocationUI();
+      return;
+    }
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation not supported');
+      return;
+    }
+    state.locationLoading = true;
+    state.locationEnabled = true;
+    state.locationError = null;
+    updateLocationUI();
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        state.userLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        state.locationLoading = false;
+        updateLocationUI();
+      },
+      function (err) {
+        state.locationLoading = false;
+        if (err.code === err.PERMISSION_DENIED) {
+          state.locationEnabled = false;
+          state.userLocation = null;
+          setLocationError('Location access denied');
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          setLocationError('Location unavailable');
+          state.locationEnabled = false;
+          state.userLocation = null;
+        } else {
+          setLocationError('Location request timed out');
+          state.locationEnabled = false;
+          state.userLocation = null;
+        }
+        updateLocationUI();
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+    );
+  }
+
+  function setLocationError(msg) {
+    state.locationError = msg;
+    if (els.locError) els.locError.textContent = msg;
+  }
+
+  function updateLocationUI() {
+    if (!els.locBtn || !els.locLabel) return;
+    if (state.locationLoading) {
+      els.locLabel.textContent = 'Getting location...';
+      els.locBtn.classList.add('active');
+    } else if (state.locationEnabled && state.userLocation) {
+      els.locLabel.textContent = 'Location: ' + state.userLocation.lat.toFixed(2) + ', ' + state.userLocation.lon.toFixed(2);
+      els.locBtn.classList.add('active');
+    } else if (state.locationEnabled && !state.userLocation) {
+      els.locLabel.textContent = 'Getting location...';
+      els.locBtn.classList.add('active');
+    } else {
+      els.locLabel.textContent = 'Use my location';
+      els.locBtn.classList.remove('active');
+    }
+    if (!state.locationEnabled && els.locError) {
+      els.locError.textContent = '';
+    }
   }
 
   function pickGreeting() {
@@ -266,22 +353,8 @@ window.ACTApp = (function () {
       appendChipRow(['Show me all tours', 'Different question'], 'Next steps');
       return;
     }
-    if (label === 'Back to tours') {
-      els.composerInput.value = 'What tours do you offer?';
-      els.sendBtn.disabled = false;
-      els.sendBtn.style.opacity = '1';
-      handleSend();
-      return;
-    }
-    if (label === 'Show me all tours') {
-      els.composerInput.value = 'What tours do you offer?';
-      els.sendBtn.disabled = false;
-      els.sendBtn.style.opacity = '1';
-      handleSend();
-      return;
-    }
-    if (label === 'Show me more tours like this' || label === 'Different question') {
-      els.composerInput.value = 'What other tours do you have?';
+    if (label === 'Back to tours' || label === 'Show me all tours' || label === 'Show me more tours like this' || label === 'Different question') {
+      els.composerInput.value = label === 'Different question' ? '' : 'What tours do you offer?';
       els.sendBtn.disabled = false;
       els.sendBtn.style.opacity = '1';
       handleSend();
@@ -295,14 +368,12 @@ window.ACTApp = (function () {
 
   function handleTourCommand(text, tours) {
     var lower = text.toLowerCase();
-
     if (lower.indexOf('all tours') !== -1 || lower.indexOf('show me all') !== -1 || lower.indexOf('what tours do you offer') !== -1) {
       var all = tours.slice(0, 5);
       var html = '<p>We offer <strong>' + tours.length + '</strong> tours along the Wild Atlantic Way. Here are some highlights:</p>' +
         window.ACTTours.formatTourList(tours, 5);
       return { response: html, chips: ['What is available in Galway?', 'Do you have any food tours?', 'Tours under EUR 50', 'Different question'] };
     }
-
     if (lower.indexOf('under') !== -1 || lower.indexOf('less than') !== -1 || lower.indexOf('budget') !== -1) {
       var match = lower.match(/(\d+)/);
       if (match) {
@@ -313,7 +384,6 @@ window.ACTApp = (function () {
         }
       }
     }
-
     return null;
   }
 
@@ -325,19 +395,18 @@ window.ACTApp = (function () {
     state.sending = true;
     els.composerInput.value = '';
     els.sendBtn.disabled = true;
-    els.sendBtn.style.opacity = '0.5';
+    els.sendBtn.style.opacity = '0.3';
+    els.composerInput.style.height = 'auto';
 
     appendUserMessage(text);
     state.history.push({ role: 'user', text: text });
 
-    // Fetch fresh tour data from Google Sheets
     try {
       state.tours = await window.ACTTours.fetchTours();
     } catch (e) {
       state.tours = state.tours || [];
     }
 
-    // Check for special commands
     var command = handleTourCommand(text, state.tours);
     if (command) {
       appendBotMessage(command.response, true);
@@ -347,7 +416,6 @@ window.ACTApp = (function () {
       return;
     }
 
-    // Run intent matching
     var match = window.ACTMatcher.matchIntent(text, state.tours, window.ACTCompany);
 
     if (match.type === 'faq' && match.confidence >= 0.4) {
@@ -374,14 +442,17 @@ window.ACTApp = (function () {
   async function handleOutOfPolicy(text) {
     var fallback = window.ACTCompany.outOfScopeFallback;
     var chips = fallback.followupChips.slice();
-    var fallbackText = stripHtml(fallback.response);
-
-    appendScopeNotice();
 
     if (window.ACTGemini && window.ACTGemini.isConfigured()) {
+      // Show scope notice then call AI
+      appendScopeNotice();
       var loadingNode = appendLoadingBubble();
       try {
-        var html = await window.ACTGemini.generateResponse(text, state.history.slice(), policyAsContext());
+        var html = await window.ACTGemini.generateResponse(
+          text,
+          state.history.slice(),
+          policyAsContext()
+        );
         loadingNode.remove();
         appendBotMessage(html, true);
         state.history.push({ role: 'model', text: stripHtml(html) });
@@ -393,8 +464,10 @@ window.ACTApp = (function () {
       }
     }
 
+    // No AI fallback available: show scope notice then fallback
+    appendScopeNotice();
     appendBotMessage(fallback.response, true);
-    state.history.push({ role: 'model', text: fallbackText });
+    state.history.push({ role: 'model', text: stripHtml(fallback.response) });
     appendChipRow(chips, 'Suggested follow-ups');
   }
 
@@ -418,6 +491,10 @@ window.ACTApp = (function () {
         ' | Meet: ' + tour.meeting_point +
         (tour.special_offer ? ' | Offer: ' + tour.special_offer : '') +
         ' | Description: ' + (tour.description || ''));
+    }
+    if (state.userLocation) {
+      lines.push('');
+      lines.push('USER LOCATION: lat=' + state.userLocation.lat + ', lon=' + state.userLocation.lon + ' (for reference if relevant to their question)');
     }
     lines.push('');
     lines.push('Contact: +353 86 229 3331 or info@atlanticcoasttours.ie');
