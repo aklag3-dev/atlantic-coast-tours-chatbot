@@ -14,7 +14,8 @@ window.ACTApp = (function () {
     locationError: null,
     aiConfigured: false,
     personaEnabled: false,
-    darkEnabled: false
+    darkEnabled: false,
+    lastResponsePersona: null
   };
 
   function $(id) { return document.getElementById(id); }
@@ -496,6 +497,8 @@ window.ACTApp = (function () {
 
         // Build context with tour info + weather
         var context = policyAsContext();
+        var pChange = personaChanged();
+        if (pChange) context = pChange + context;
         if (weatherContext) context += '\n\n' + weatherContext;
 
         var html = await window.ACTGemini.generateResponse(text, state.history.slice(), context);
@@ -504,6 +507,7 @@ window.ACTApp = (function () {
         state.history.push({ role: 'model', text: stripHtml(html) });
         appendAiFootnote();
         appendChipRow(match.chips, 'Suggested follow-ups');
+        state.lastResponsePersona = state.personaEnabled;
         return;
       } catch (e) {
         loadingNode.remove();
@@ -514,6 +518,14 @@ window.ACTApp = (function () {
     appendBotMessage(window.ACTTours.formatSingleTour(tour), true);
     state.history.push({ role: 'model', text: stripHtml(window.ACTTours.formatSingleTour(tour)) });
     appendChipRow(match.chips, 'Suggested follow-ups');
+  }
+
+  function personaChanged() {
+    if (state.lastResponsePersona === null) return '';
+    if (state.personaEnabled === state.lastResponsePersona) return '';
+    var switchingTo = state.personaEnabled ? window.ACTCompany.persona.name : 'professional mode';
+    var switchingFrom = state.personaEnabled ? 'professional mode' : window.ACTCompany.persona.name;
+    return 'NOTE: The assistant persona has just changed from ' + switchingFrom + ' to ' + switchingTo + '. Briefly acknowledge this switch at the very start of your response (e.g. "Right, professional hat on!" or "Ah, you have got Fiona back!"). Then continue with the answer normally.\n\n';
   }
 
   function stripHtml(html) {
@@ -532,7 +544,8 @@ window.ACTApp = (function () {
       var loadingNode = appendLoadingBubble();
       try {
         var context = policyAsContext();
-        // Include weather data for the user's location if available
+        var pChange = personaChanged();
+        if (pChange) context = pChange + context;
         if (includeWeather && state.userLocation) {
           try {
             var forecast = await window.ACTWeather.getForecast(state.userLocation.lat, state.userLocation.lon);
@@ -547,6 +560,7 @@ window.ACTApp = (function () {
         state.history.push({ role: 'model', text: stripHtml(html) });
         appendAiFootnote();
         appendChipRow(chips, 'Suggested follow-ups');
+        state.lastResponsePersona = state.personaEnabled;
         return;
       } catch (e) {
         loadingNode.remove();
