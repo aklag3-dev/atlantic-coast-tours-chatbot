@@ -446,78 +446,93 @@ window.ACTApp = (function () {
       state.tours = state.tours || [];
     }
 
-    var command = handleTourCommand(text, state.tours);
-    if (command) {
-      appendBotMessage(command.response, true);
-      appendChipRow(command.chips, 'Suggested follow-ups');
-      state.history.push({ role: 'model', text: stripHtml(command.response) });
-      state.sending = false;
-      return;
-    }
-
-    var match = window.ACTMatcher.matchIntent(text, state.tours, window.ACTCompany);
-
-    if (match.type === 'faq' && match.confidence >= 0.4) {
-      appendBotMessage(match.response, true);
-      appendChipRow(match.chips, 'Suggested follow-ups');
-      state.history.push({ role: 'model', text: stripHtml(match.response) });
-    } else if (match.type === 'weather-tour') {
-      await handleWeatherTour(text, match);
-    } else if (match.type === 'tour' || match.type === 'tour-list') {
-      appendBotMessage(match.response, true);
-      appendChipRow(match.chips, 'Suggested follow-ups');
-      state.history.push({ role: 'model', text: stripHtml(match.response) });
+    if (window.ACTGemini && window.ACTGemini.isConfigured()) {
+      await handleWithAI(text);
     } else {
-      await handleOutOfPolicy(text, false);
+      // AI not available — use rule-based fallback
+      var command = handleTourCommand(text, state.tours);
+      if (command) {
+        appendBotMessage(command.response, true);
+        appendChipRow(command.chips, 'Suggested follow-ups');
+        state.history.push({ role: 'model', text: stripHtml(command.response) });
+        state.sending = false;
+        return;
+      }
+
+      var match = window.ACTMatcher.matchIntent(text, state.tours, window.ACTCompany);
+
+      if (match.type === 'weather-tour' || match.type === 'tour') {
+        var tour = match.tours && match.tours[0];
+        if (tour) {
+          appendBotMessage(window.ACTTours.formatSingleTour(tour), true);
+        } else {
+          appendBotMessage(match.response, true);
+        }
+        appendChipRow(match.chips, 'Suggested follow-ups');
+        state.history.push({ role: 'model', text: stripHtml(tour ? window.ACTTours.formatSingleTour(tour) : match.response) });
+      } else if (match.confidence >= 0.4) {
+        appendBotMessage(match.response, true);
+        appendChipRow(match.chips, 'Suggested follow-ups');
+        state.history.push({ role: 'model', text: stripHtml(match.response) });
+      } else {
+        await handleOutOfPolicy(text, false);
+      }
     }
 
     state.sending = false;
   }
 
-  async function handleWeatherTour(text, match) {
-    var tour = match.tours[0];
-    var location = tour.tour_name + ', ' + tour.location;
+  async function handleWithAI(text) {
+    var loadingNode = appendLoadingBubble();
+    var chips = ['Show me all tours', 'What is available in Galway?', 'What should I pack?', 'Different question'];
 
-    appendScopeNotice();
+    try {
+      var context = policyAsContext();
+      var pChange = personaChanged();
+      if (pChange) context = pChange + context;
 
-    if (window.ACTGemini && window.ACTGemini.isConfigured()) {
-      var loadingNode = appendLoadingBubble();
+      // Include tour location weather data
       try {
-        // Try to geocode + get weather for the tour location
-        var weatherContext = '';
+        if (state.tours && state.tours.length > 0) {
+          var weatherData = await window.ACTWeather.getTourLocationsWeather(state.tours);
+          if (weatherData) {
+            context += '\n\nTOUR LOCATIONS WEATHER FORECAST:\n' + weatherData;
+          }
+        }
+      } catch (e) {}
+
+      // Include user location weather data
+      if (state.userLocation) {
         try {
-          var coords = await window.ACTWeather.geocode(tour.location.split(',')[0].trim() + ', Ireland');
-          if (coords) {
-            var forecast = await window.ACTWeather.getForecast(coords.lat, coords.lon);
-            if (forecast) {
-              weatherContext = window.ACTWeather.summarizeForPrompt(forecast, tour.location);
-            }
+          var forecast = await window.ACTWeather.getForecast(state.userLocation.lat, state.userLocation.lon);
+          if (forecast) {
+            context += '\n\n' + window.ACTWeather.summarizeForPrompt(forecast, 'Your location');
           }
         } catch (e) {}
+      }
 
-        // Build context with tour info + weather
-        var context = policyAsContext();
-        var pChange = personaChanged();
-        if (pChange) context = pChange + context;
-        if (weatherContext) context += '\n\n' + weatherContext;
+      context += '\n\nINSTRUCTIONS: Answer the user question above using the tour database and company information provided. Use weather data when relevant to give personalised recommendations. Be specific — quote prices, durations, meeting points, and special offers where applicable. If the user asks about packing or what to bring, recommend items based on the tour type and weather forecast.';
 
-        var html = await window.ACTGemini.generateResponse(text, state.history.slice(), context);
-        loadingNode.remove();
-        appendBotMessage(html, true);
-        state.history.push({ role: 'model', text: stripHtml(html) });
-        appendAiFootnote();
+      var html = await window.ACTGemini.generateResponse(text, state.history.slice(), context);
+      loadingNode.remove();
+      appendBotMessage(html, true);
+      state.history.push({ role: 'model', text: stripHtml(html) });
+      appendChipRow(chips, 'Suggested follow-ups');
+      state.lastResponsePersona = state.personaEnabled;
+    } catch (e) {
+      loadingNode.remove();
+      // Fallback to rule-based
+      var match = window.ACTMatcher.matchIntent(text, state.tours || [], window.ACTCompany);
+      if (match.confidence >= 0.4) {
+        appendBotMessage(match.response, true);
         appendChipRow(match.chips, 'Suggested follow-ups');
-        state.lastResponsePersona = state.personaEnabled;
-        return;
-      } catch (e) {
-        loadingNode.remove();
+        state.history.push({ role: 'model', text: stripHtml(match.response) });
+      } else {
+        appendBotMessage(window.ACTCompany.outOfScopeFallback.response, true);
+        appendChipRow(window.ACTCompany.outOfScopeFallback.followupChips, 'Suggested follow-ups');
+        state.history.push({ role: 'model', text: stripHtml(window.ACTCompany.outOfScopeFallback.response) });
       }
     }
-
-    // Fallback: show tour info without weather
-    appendBotMessage(window.ACTTours.formatSingleTour(tour), true);
-    state.history.push({ role: 'model', text: stripHtml(window.ACTTours.formatSingleTour(tour)) });
-    appendChipRow(match.chips, 'Suggested follow-ups');
   }
 
   function personaChanged() {
