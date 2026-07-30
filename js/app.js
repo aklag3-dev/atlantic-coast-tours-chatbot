@@ -277,7 +277,7 @@ window.ACTApp = (function () {
     var avatar = document.createElement('div');
     avatar.className = 'avatar';
     avatar.setAttribute('aria-hidden', 'true');
-    avatar.textContent = 'A';
+    avatar.textContent = state.personaEnabled ? '\u{1F9D1}\u200D\u{1F9B0}' : '\u{1F454}';
     var bubble = document.createElement('div');
     bubble.className = 'bubble';
     bubble.innerHTML = html;
@@ -318,7 +318,7 @@ window.ACTApp = (function () {
     var avatar = document.createElement('div');
     avatar.className = 'avatar';
     avatar.setAttribute('aria-hidden', 'true');
-    avatar.textContent = 'A';
+    avatar.textContent = state.personaEnabled ? '\u{1F9D1}\u200D\u{1F9B0}' : '\u{1F454}';
     var bubble = document.createElement('div');
     bubble.className = 'bubble loading';
     bubble.setAttribute('role', 'status');
