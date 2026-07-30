@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Atlantic Coast Tours — Assistant</title>
-  <meta name="description" content="Atlantic Coast Tours customer support — find tours, check prices, and explore the Wild Atlantic Way.">
+  <title>Atlantic Coast Tours — Explore the Wild Atlantic Way</title>
+  <meta name="description" content="Atlantic Coast Tours offers guided experiences along Ireland's Wild Atlantic Way — from the Cliffs of Moher to Connemara and Achill Island.">
   <meta name="theme-color" content="#FFFFFF">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=2">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=4">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -17,63 +17,199 @@
 </head>
 <body>
 
-  <div class="app" role="application" aria-label="Atlantic Coast Tours Assistant">
-
-    <header class="app-header">
-      <div class="brand">
-        <svg class="mark" width="36" height="36" viewBox="0 0 32 32" aria-hidden="true">
+  <!-- Landing page -->
+  <div class="landing" id="landing">
+    <section class="hero">
+      <div class="hero-content">
+        <svg class="hero-mark" width="64" height="64" viewBox="0 0 32 32" aria-hidden="true">
           <rect width="32" height="32" rx="8" fill="#1A6B6B"/>
           <path d="M6 18 Q12 10 16 14 T26 10" stroke="#F5F0E8" stroke-width="2.4" stroke-linecap="round" fill="none"/>
           <circle cx="18" cy="10" r="2" fill="#D4943E"/>
         </svg>
-        <div class="text">
-          <h1 class="wordmark">Atlantic Coast Tours</h1>
-          <span class="tagline">Virtual Assistant</span>
+        <h1 class="hero-title">Atlantic Coast Tours</h1>
+        <p class="hero-subtitle">Explore the Wild Atlantic Way</p>
+        <p class="hero-desc">Guided cliff walks, kayaking adventures, island boat trips, and food tours along Ireland's spectacular west coast. Led by local guides who know every hidden corner.</p>
+        <a class="hero-cta" href="#featured">Explore Tours</a>
+      </div>
+    </section>
+
+    <section class="featured" id="featured">
+      <div class="featured-inner">
+        <h2 class="section-title">Featured Tours</h2>
+        <p class="section-subtitle">Handpicked experiences from our collection</p>
+        <div class="tour-cards" id="tour-cards">
+          <div class="tour-card loading-card">Loading tours...</div>
         </div>
       </div>
-      <div class="header-end">
-        <span class="live-dot" aria-label="AI assistant online" title="AI assistant online"></span>
-        <button class="header-toggle" id="persona-btn" type="button" aria-label="Toggle Fiona persona">👔</button>
-        <button class="header-toggle" id="dark-btn" type="button" aria-label="Toggle dark mode">☀️</button>
-        <button class="icon-btn" id="info-btn" type="button" aria-label="About this assistant">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="16" x2="12" y2="12"/>
-            <line x1="12" y1="8" x2="12.01" y2="8"/>
+    </section>
+
+    <section class="why-us">
+      <div class="why-inner">
+        <h2 class="section-title">Why Atlantic Coast Tours</h2>
+        <p class="section-subtitle">Experiences designed around you</p>
+        <div class="why-grid">
+          <div class="why-card">
+            <div class="why-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <h3>Local Guides</h3>
+            <p>Every tour is led by a guide born and raised along the Wild Atlantic Way. They know the hidden trails, the best craic, and exactly when the seabirds come home to roost.</p>
+          </div>
+          <div class="why-card">
+            <div class="why-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <h3>Small Groups</h3>
+            <p>We keep groups intimate — typically 8-16 people — so you get personal attention, ask all your questions, and never feel rushed. Private tours also available.</p>
+          </div>
+          <div class="why-card">
+            <div class="why-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3>Sustainable Tourism</h3>
+            <p>We operate with minimal impact — zero-single-use plastic on all tours, support local conservation projects, and partner with family-run businesses along the coast.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="landing-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="6" fill="#1A6B6B"/>
+            <path d="M6 18 Q12 10 16 14 T26 10" stroke="#F5F0E8" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="18" cy="10" r="1.5" fill="#D4943E"/>
+          </svg>
+          <span>Atlantic Coast Tours</span>
+        </div>
+        <div class="footer-links">
+          <div class="footer-col">
+            <h4>Contact</h4>
+            <a href="tel:+353862293331">+353 86 229 3331</a>
+            <a href="mailto:info@atlanticcoasttours.ie">info@atlanticcoasttours.ie</a>
+          </div>
+          <div class="footer-col">
+            <h4>Location</h4>
+            <p>Knockbeg, Collooney<br>Co. Sligo, F91 YA47<br>Ireland</p>
+          </div>
+          <div class="footer-col">
+            <h4>Quick Links</h4>
+            <a href="#featured">Tours</a>
+            <a href="#" id="footer-chat-link">Chat with us</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2026 Atlantic Coast Tours &middot; CRO No. 637458 &middot; Explore the Wild Atlantic Way</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Chat bubble -->
+  <button class="chat-bubble" id="chat-bubble" type="button" aria-label="Open chat">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  </button>
+
+  <button class="chat-bubble-close" id="chat-bubble-close" type="button" aria-label="Close chat">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </button>
+
+  <!-- Chat overlay + panel -->
+  <div class="chat-overlay" id="chat-overlay" aria-hidden="true">
+    <div class="chat-panel" id="chat-panel">
+      <div class="chat-panel-header">
+        <div class="panel-header-brand">
+          <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="6" fill="#1A6B6B"/>
+            <path d="M6 18 Q12 10 16 14 T26 10" stroke="#F5F0E8" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="18" cy="10" r="1.5" fill="#D4943E"/>
+          </svg>
+          <span>Chat with us</span>
+        </div>
+        <button class="panel-close" id="panel-close-btn" type="button" aria-label="Close chat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
       </div>
-    </header>
 
-    <main class="thread" id="thread" aria-live="polite" aria-atomic="false">
-    </main>
+      <div class="app" role="application" aria-label="Atlantic Coast Tours Assistant">
 
-    <div class="suggestions-area" id="suggestions-area">
-      <div class="location-bar">
-        <button class="loc-btn" id="loc-btn" type="button" aria-label="Use my location">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-            <circle cx="12" cy="12" r="10" stroke-dasharray="4 2"/>
-          </svg>
-          <span id="loc-label">Use my location</span>
-        </button>
-        <span class="loc-error" id="loc-error"></span>
-      </div>
-      <form class="composer" id="composer-form" autocomplete="off" aria-label="Send a message">
-        <label class="sr-only" for="composer-input">Type a message</label>
-        <div class="composer-inner">
-          <textarea id="composer-input" placeholder="Ask about tours, prices, or booking..." rows="1" autocomplete="off" spellcheck="true" maxlength="500"></textarea>
-          <button class="send-btn" id="send-btn" type="submit" aria-label="Send message" disabled>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <line x1="22" y1="2" x2="11" y2="13"/>
-              <polygon points="22 2 15 22 11 13 2 9 22 2" fill="currentColor" stroke="none"/>
+        <header class="app-header">
+          <div class="brand">
+            <svg class="mark" width="36" height="36" viewBox="0 0 32 32" aria-hidden="true">
+              <rect width="32" height="32" rx="8" fill="#1A6B6B"/>
+              <path d="M6 18 Q12 10 16 14 T26 10" stroke="#F5F0E8" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+              <circle cx="18" cy="10" r="2" fill="#D4943E"/>
             </svg>
-          </button>
-        </div>
-      </form>
-    </div>
+            <div class="text">
+              <h1 class="wordmark">Atlantic Coast Tours</h1>
+              <span class="tagline">Virtual Assistant</span>
+            </div>
+          </div>
+          <div class="header-end">
+            <span class="live-dot" aria-label="AI assistant online" title="AI assistant online"></span>
+            <button class="header-toggle" id="persona-btn" type="button" aria-label="Toggle Fiona persona">&#x1F454;</button>
+            <button class="header-toggle" id="dark-btn" type="button" aria-label="Toggle dark mode">&#x2600;&#xFE0F;</button>
+            <button class="icon-btn" id="info-btn" type="button" aria-label="About this assistant">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </button>
+          </div>
+        </header>
 
+        <main class="thread" id="thread" aria-live="polite" aria-atomic="false">
+        </main>
+
+        <div class="suggestions-area" id="suggestions-area">
+          <div class="location-bar">
+            <button class="loc-btn" id="loc-btn" type="button" aria-label="Use my location">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+                <circle cx="12" cy="12" r="10" stroke-dasharray="4 2"/>
+              </svg>
+              <span id="loc-label">Use my location</span>
+            </button>
+            <span class="loc-error" id="loc-error"></span>
+          </div>
+          <form class="composer" id="composer-form" autocomplete="off" aria-label="Send a message">
+            <label class="sr-only" for="composer-input">Type a message</label>
+            <div class="composer-inner">
+              <textarea id="composer-input" placeholder="Ask about tours, prices, or booking..." rows="1" autocomplete="off" spellcheck="true" maxlength="500"></textarea>
+              <button class="send-btn" id="send-btn" type="submit" aria-label="Send message" disabled>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" fill="currentColor" stroke="none"/>
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <div class="modal-overlay" id="info-overlay" role="dialog" aria-modal="true" aria-hidden="true">
