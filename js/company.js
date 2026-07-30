@@ -154,6 +154,42 @@ window.ACTCompany = {
       ]
     },
     {
+      id: 'weather',
+      title: 'Weather and packing',
+      keywords: [
+        'weather', 'forecast', 'rain', 'sunny', 'temperature',
+        'pack', 'packing', 'bring', 'wear', 'what to bring', 'what to wear',
+        'cold', 'warm', 'hot', 'wind', 'windy',
+        'recommend', 'outfit', 'clothes', 'dress',
+        'conditions', 'conditions today', 'conditions tomorrow',
+        'supplies', 'gear', 'equipment', 'tools',
+        'umbrella', 'jacket', 'coat', 'waterproof',
+        'sunscreen', 'hat', 'sunglasses',
+        'suitable', 'appropriate',
+        'layer', 'layers', 'thermal'
+      ],
+      triggers: [
+        /(weather|forecast|rain|sunny|temperature).*(tour|trip|today|tomorrow|week)/i,
+        /what.*(weather|forecast)/i,
+        /(pack|bring|wear|take).*(tour|trip|what)/i,
+        /what.*(pack|bring|wear)/i,
+        /(recommend|suggest).*(pack|bring|wear|outfit)/i,
+        /(outfit|clothes|dress).*(weather|tour|trip)/i,
+        /weather.*(today|tomorrow|now)/i,
+        /(cold|warm|hot|windy|rain).*(galway|clare|mayo|doolin|connemara|achill)/i,
+        /Irish.*(weather|climate|forecast)/i,
+        /how.*(cold|warm|hot|windy).*(today|tomorrow|be)/i,
+        /what.*(supplies|gear|equipment).*(need|bring)/i
+      ],
+      response: "<p>I can check the latest weather forecast for your location or any tour area along the Wild Atlantic Way. Enable location sharing or tell me which tour you are interested in and I will provide a detailed forecast with packing recommendations.</p><p>For a specific tour, try asking something like <em>\"What is the weather like for the Cliffs of Moher walk tomorrow?\"</em> or <em>\"What should I pack for a kayaking trip in Kilkee?\"</em></p>",
+      followupChips: [
+        'Weather for Galway this weekend',
+        'What to pack for a cliff walk?',
+        'Will it rain tomorrow?',
+        'Different question'
+      ]
+    },
+    {
       id: 'general',
       title: 'General information',
       keywords: [

@@ -1,0 +1,154 @@
+window.ACTWeather = (function () {
+  'use strict';
+
+  var FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
+  var GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search';
+
+  var WMO_CODES = {
+    0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+    45: 'Foggy', 48: 'Depositing rime fog',
+    51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
+    56: 'Light freezing drizzle', 57: 'Dense freezing drizzle',
+    61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
+    66: 'Light freezing rain', 67: 'Heavy freezing rain',
+    71: 'Slight snowfall', 73: 'Moderate snowfall', 75: 'Heavy snowfall',
+    77: 'Snow grains',
+    80: 'Slight rain showers', 81: 'Moderate rain showers', 82: 'Violent rain showers',
+    85: 'Slight snow showers', 86: 'Heavy snow showers',
+    95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail'
+  };
+
+  function describeWMO(code) {
+    return WMO_CODES[code] || 'Unknown';
+  }
+
+  function windDir(deg) {
+    if (deg == null) return '';
+    var dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    return dirs[Math.round(deg / 45) % 8];
+  }
+
+  function nowFormatted() {
+    var d = new Date();
+    return d.toISOString().split('T')[0];
+  }
+
+  async function geocode(query) {
+    var url = GEO_URL + '?name=' + encodeURIComponent(query) + '&count=1&language=en&format=json';
+    try {
+      var res = await fetch(url);
+      var data = await res.json();
+      if (data.results && data.results.length > 0) {
+        var r = data.results[0];
+        return { lat: r.latitude, lon: r.longitude, name: r.name, country: r.country || '' };
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  async function getForecast(lat, lon) {
+    var params =
+      'latitude=' + lat +
+      '&longitude=' + lon +
+      '&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weathercode,windspeed_10m_max,winddirection_10m_dominant,sunrise,sunset' +
+      '&current=temperature_2m,weathercode,wind_speed_10m,apparent_temperature,precipitation' +
+      '&timezone=auto&forecast_days=7';
+    try {
+      var res = await fetch(FORECAST_URL + '?' + params);
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function formatCurrent(data) {
+    if (!data || !data.current) return '';
+    var c = data.current;
+    var desc = describeWMO(c.weathercode);
+    return 'Current: ' + c.temperature_2m + '°C (feels like ' + c.apparent_temperature + '°C), ' + desc + ', wind ' + c.wind_speed_10m + ' km/h';
+  }
+
+  function formatDaily(data, days) {
+    days = days || 3;
+    if (!data || !data.daily) return '';
+    var d = data.daily;
+    var lines = [];
+    var today = nowFormatted();
+    for (var i = 0; i < Math.min(days, d.time.length); i++) {
+      var label = d.time[i] === today ? 'Today' : d.time[i];
+      var precip = d.precipitation_sum[i] > 0 ? ', ' + d.precipitation_sum[i] + ' mm rain' : ', dry';
+      var prob = d.precipitation_probability_max[i] != null ? ' (' + d.precipitation_probability_max[i] + '% chance)' : '';
+      lines.push(label + ': ' + d.temperature_2m_min[i] + '-' + d.temperature_2m_max[i] + '°C, ' +
+        describeWMO(d.weathercode[i]) + precip + prob +
+        ', wind ' + d.windspeed_10m_max[i] + ' km/h ' + windDir(d.winddirection_10m_dominant[i]));
+    }
+    return lines.join('\n');
+  }
+
+  function summarizeForPrompt(data, locationName) {
+    if (!data) return '';
+    var loc = locationName ? 'Weather for ' + locationName : 'Weather';
+    return loc + ':\n' + formatCurrent(data) + '\n' + formatDaily(data, 5);
+  }
+
+  async function getTourLocationsWeather(tours) {
+    if (!tours || !tours.length) return '';
+    var seen = {};
+    var results = [];
+    for (var i = 0; i < tours.length; i++) {
+      var loc = tours[i].location;
+      if (!loc || seen[loc]) continue;
+      seen[loc] = true;
+      var coords = await geocode(loc);
+      if (coords) {
+        var forecast = await getForecast(coords.lat, coords.lon);
+        if (forecast) {
+          results.push(summarizeForPrompt(forecast, loc));
+        }
+      }
+    }
+    return results.length ? results.join('\n\n') : '';
+  }
+
+  function packingAdvice(weather, tourCategory, durationHours) {
+    var tips = [];
+    var w = weather && weather.current;
+    if (!w) return '';
+
+    var temp = w.temperature_2m;
+    var code = w.weathercode;
+    var isRain = (code >= 51 && code <= 67) || (code >= 80 && code <= 82);
+    var isCold = temp < 10;
+    var isWindy = w.wind_speed_10m > 30;
+    var isHot = temp > 22;
+    var isKayak = tourCategory && tourCategory.toLowerCase().indexOf('kayak') !== -1;
+    var isWalk = tourCategory && (tourCategory.toLowerCase().indexOf('walk') !== -1 || tourCategory.toLowerCase().indexOf('hike') !== -1);
+    var isCycle = tourCategory && tourCategory.toLowerCase().indexOf('cycle') !== -1;
+    var isBoat = tourCategory && tourCategory.toLowerCase().indexOf('boat') !== -1;
+    var isFood = tourCategory && tourCategory.toLowerCase().indexOf('food') !== -1;
+
+    if (isRain) tips.push('waterproof jacket or poncho');
+    if (isCold) tips.push('warm layers (fleece or jumper)');
+    if (isWindy) tips.push('windproof outer layer');
+    if (isHot) tips.push('sun protection (hat, sunscreen, sunglasses)');
+    if (isWalk || isCycle) tips.push('comfortable walking shoes or trainers');
+    if (isKayak) tips.push('change of clothes, towel, and waterproof bag for valuables');
+    if (isBoat) tips.push('warm jacket, seasickness tablets if prone, and a camera');
+    if (isFood) tips.push('an appetite and comfortable shoes for walking between stops');
+    if (durationHours && durationHours > 4) tips.push('water bottle and light snacks');
+    tips.push('fully charged phone or camera');
+
+    return tips;
+  }
+
+  return {
+    geocode: geocode,
+    getForecast: getForecast,
+    formatCurrent: formatCurrent,
+    formatDaily: formatDaily,
+    summarizeForPrompt: summarizeForPrompt,
+    getTourLocationsWeather: getTourLocationsWeather,
+    packingAdvice: packingAdvice,
+    describeWMO: describeWMO
+  };
+})();

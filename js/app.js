@@ -422,15 +422,60 @@ window.ACTApp = (function () {
       appendBotMessage(match.response, true);
       appendChipRow(match.chips, 'Suggested follow-ups');
       state.history.push({ role: 'model', text: stripHtml(match.response) });
+    } else if (match.type === 'weather-tour') {
+      await handleWeatherTour(text, match);
     } else if (match.type === 'tour' || match.type === 'tour-list') {
       appendBotMessage(match.response, true);
       appendChipRow(match.chips, 'Suggested follow-ups');
       state.history.push({ role: 'model', text: stripHtml(match.response) });
     } else {
-      await handleOutOfPolicy(text);
+      await handleOutOfPolicy(text, false);
     }
 
     state.sending = false;
+  }
+
+  async function handleWeatherTour(text, match) {
+    var tour = match.tours[0];
+    var location = tour.tour_name + ', ' + tour.location;
+
+    appendScopeNotice();
+
+    if (window.ACTGemini && window.ACTGemini.isConfigured()) {
+      var loadingNode = appendLoadingBubble();
+      try {
+        // Try to geocode + get weather for the tour location
+        var weatherContext = '';
+        try {
+          var coords = await window.ACTWeather.geocode(tour.location.split(',')[0].trim() + ', Ireland');
+          if (coords) {
+            var forecast = await window.ACTWeather.getForecast(coords.lat, coords.lon);
+            if (forecast) {
+              weatherContext = window.ACTWeather.summarizeForPrompt(forecast, tour.location);
+            }
+          }
+        } catch (e) {}
+
+        // Build context with tour info + weather
+        var context = policyAsContext();
+        if (weatherContext) context += '\n\n' + weatherContext;
+
+        var html = await window.ACTGemini.generateResponse(text, state.history.slice(), context);
+        loadingNode.remove();
+        appendBotMessage(html, true);
+        state.history.push({ role: 'model', text: stripHtml(html) });
+        appendAiFootnote();
+        appendChipRow(match.chips, 'Suggested follow-ups');
+        return;
+      } catch (e) {
+        loadingNode.remove();
+      }
+    }
+
+    // Fallback: show tour info without weather
+    appendBotMessage(window.ACTTours.formatSingleTour(tour), true);
+    state.history.push({ role: 'model', text: stripHtml(window.ACTTours.formatSingleTour(tour)) });
+    appendChipRow(match.chips, 'Suggested follow-ups');
   }
 
   function stripHtml(html) {
@@ -439,20 +484,26 @@ window.ACTApp = (function () {
     return tmp.textContent || '';
   }
 
-  async function handleOutOfPolicy(text) {
+  async function handleOutOfPolicy(text, includeWeather) {
+    if (includeWeather === undefined) includeWeather = true;
     var fallback = window.ACTCompany.outOfScopeFallback;
     var chips = fallback.followupChips.slice();
 
     if (window.ACTGemini && window.ACTGemini.isConfigured()) {
-      // Show scope notice then call AI
       appendScopeNotice();
       var loadingNode = appendLoadingBubble();
       try {
-        var html = await window.ACTGemini.generateResponse(
-          text,
-          state.history.slice(),
-          policyAsContext()
-        );
+        var context = policyAsContext();
+        // Include weather data for the user's location if available
+        if (includeWeather && state.userLocation) {
+          try {
+            var forecast = await window.ACTWeather.getForecast(state.userLocation.lat, state.userLocation.lon);
+            if (forecast) {
+              context += '\n\n' + window.ACTWeather.summarizeForPrompt(forecast, 'Your location');
+            }
+          } catch (e) {}
+        }
+        var html = await window.ACTGemini.generateResponse(text, state.history.slice(), context);
         loadingNode.remove();
         appendBotMessage(html, true);
         state.history.push({ role: 'model', text: stripHtml(html) });
@@ -464,7 +515,6 @@ window.ACTApp = (function () {
       }
     }
 
-    // No AI fallback available: show scope notice then fallback
     appendScopeNotice();
     appendBotMessage(fallback.response, true);
     state.history.push({ role: 'model', text: stripHtml(fallback.response) });
@@ -496,6 +546,8 @@ window.ACTApp = (function () {
       lines.push('');
       lines.push('USER LOCATION: lat=' + state.userLocation.lat + ', lon=' + state.userLocation.lon + ' (for reference if relevant to their question)');
     }
+    lines.push('');
+    lines.push('PACKING ADVICE: When the user asks about packing or what to bring for a tour, consider the tour category (cliff walk, kayaking, cycling, boat tour, food tour, outdoor activity), the duration, and any available weather data. Recommend appropriate clothing, footwear, sun/rain protection, and equipment based on the tour type and conditions.');
     lines.push('');
     lines.push('Contact: +353 86 229 3331 or info@atlanticcoasttours.ie');
     return lines.join('\n');

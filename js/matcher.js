@@ -110,11 +110,15 @@ window.ACTMatcher = (function () {
 
     // Score against FAQ categories
     var best = null;
+    var weatherScore = 0;
     for (var i = 0; i < company.categories.length; i++) {
       var cat = company.categories[i];
       var score = scoreCategory(input, tokens, cat);
       if (best === null || score > best.score) {
         best = { score: score, category: cat };
+      }
+      if (cat.id === 'weather' && score > weatherScore) {
+        weatherScore = score;
       }
     }
 
@@ -130,12 +134,32 @@ window.ACTMatcher = (function () {
       };
     }
 
+    // Check if this is a weather-related query combined with a tour
+    var hasWeatherIntent = weatherScore >= 0.18;
+
     // Check if this is a tour-related query
-    if (isTourQuery(input) || best.score >= 0.18) {
+    if (isTourQuery(input) || best.score >= 0.18 || hasWeatherIntent) {
       var searched = window.ACTTours.searchTours(input, tours);
 
       if (searched.length === 1) {
         var single = searched[0];
+        // Weather + Tour combination: pass to app.js for enriched handling
+        if (hasWeatherIntent) {
+          return {
+            intent: 'weather-tour',
+            confidence: Math.max(0.6, weatherScore),
+            type: 'weather-tour',
+            response: '',
+            chips: [
+              'What should I pack for this tour?',
+              'Will it rain on this tour?',
+              'Book this tour',
+              'Different question'
+            ],
+            tours: searched,
+            weatherCategory: true
+          };
+        }
         return {
           intent: 'tour-single',
           confidence: 0.7,
