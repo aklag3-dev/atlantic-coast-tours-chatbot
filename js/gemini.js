@@ -16,8 +16,8 @@ window.ACTGemini = (function () {
   function statusLabel() {
     if (!PROXY_URL) return 'AI fallback: off (rule-based only)';
     try {
-      var u = new URL(PROXY_URL);
-      return 'AI fallback: on (' + u.host + ')';
+      new URL(PROXY_URL);
+      return 'AI fallback: on (Cloudflare Worker/Gemini AI model)';
     } catch (e) {
       return 'AI fallback: misconfigured';
     }
