@@ -42,7 +42,7 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   font-family: var(--font-body);
   color: var(--ink);
-  background: var(--bg-chat);
+  background: #FFFFFF;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
