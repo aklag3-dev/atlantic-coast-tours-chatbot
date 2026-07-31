@@ -619,6 +619,53 @@ window.ACTApp = (function () {
         }
       } catch (e) {}
 
+      // Include driving distances from user's location to tour meeting points
+      try {
+        var startCoords = null;
+        var startLabel = '';
+
+        if (state.userLocation) {
+          startCoords = { lon: state.userLocation.lon, lat: state.userLocation.lat };
+          startLabel = 'Your location';
+        } else {
+          // Try to extract a starting location from the user's message
+          var mentionedLoc = window.ACTWeather.extractLocationFromMessage(text);
+          if (mentionedLoc) {
+            var coords = await window.ACTWeather.geocode(mentionedLoc + ', Ireland');
+            if (coords) {
+              startCoords = { lon: coords.lon, lat: coords.lat };
+              startLabel = mentionedLoc;
+            }
+          }
+        }
+
+        if (startCoords && state.tours && state.tours.length > 0) {
+          var distances = [];
+          var tourCount = Math.min(state.tours.length, 6);
+          for (var ti = 0; ti < tourCount; ti++) {
+            var tour = state.tours[ti];
+            if (!tour.meeting_point) continue;
+            var mpCoords = await window.ACTWeather.geocode(tour.meeting_point + ', Ireland');
+            if (mpCoords) {
+              var dist = await window.ACTDistance.getDistance(
+                startCoords.lon, startCoords.lat,
+                mpCoords.lon, mpCoords.lat
+              );
+              if (dist) {
+                distances.push({
+                  label: tour.tour_name + ' (' + tour.meeting_point + ')',
+                  distance_formatted: dist.distance_formatted,
+                  duration_formatted: dist.duration_formatted
+                });
+              }
+            }
+          }
+          if (distances.length > 0) {
+            context += '\n\n' + window.ACTDistance.formatDistanceContext(distances);
+          }
+        }
+      } catch (e) {}
+
       context += '\n\nINSTRUCTIONS: Answer the user question above using the tour database and company information provided. Use weather data when relevant to give personalised recommendations. Use the current time and date to understand time context — if the user asks about "today", "tomorrow", "this weekend", "next week", or specific dates, use the current date above to determine what they mean. Check if today is a public holiday and mention it if relevant to tour availability. Be specific — quote prices, durations, meeting points, and special offers where applicable. If the user asks about packing or what to bring, recommend items based on the tour type and weather forecast.';
 
       var html = await window.ACTGemini.generateResponse(text, state.history.slice(), context);

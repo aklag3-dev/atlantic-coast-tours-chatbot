@@ -193,6 +193,7 @@ window.ACTWeather = (function () {
     summarizeForPrompt: summarizeForPrompt,
     getTourLocationsWeather: getTourLocationsWeather,
     getUserLocationWeather: getUserLocationWeather,
+    extractLocationFromMessage: extractLocationFromMessage,
     packingAdvice: packingAdvice,
     describeWMO: describeWMO
   };
