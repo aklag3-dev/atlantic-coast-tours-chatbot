@@ -611,7 +611,15 @@ window.ACTApp = (function () {
         }
       } catch (e) {}
 
-      context += '\n\nINSTRUCTIONS: Answer the user question above using the tour database and company information provided. Use weather data when relevant to give personalised recommendations. Be specific — quote prices, durations, meeting points, and special offers where applicable. If the user asks about packing or what to bring, recommend items based on the tour type and weather forecast.';
+      // Include current time and Irish public holidays
+      try {
+        var timeContext = await window.ACTTime.getTimeAndHolidayContext();
+        if (timeContext) {
+          context += '\n\n' + timeContext;
+        }
+      } catch (e) {}
+
+      context += '\n\nINSTRUCTIONS: Answer the user question above using the tour database and company information provided. Use weather data when relevant to give personalised recommendations. Use the current time and date to understand time context — if the user asks about "today", "tomorrow", "this weekend", "next week", or specific dates, use the current date above to determine what they mean. Check if today is a public holiday and mention it if relevant to tour availability. Be specific — quote prices, durations, meeting points, and special offers where applicable. If the user asks about packing or what to bring, recommend items based on the tour type and weather forecast.';
 
       var html = await window.ACTGemini.generateResponse(text, state.history.slice(), context);
       loadingNode.remove();
