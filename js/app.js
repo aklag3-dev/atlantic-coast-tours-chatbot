@@ -215,6 +215,10 @@ window.ACTApp = (function () {
         container.innerHTML = '<div class="tour-card loading-card">No tours available right now. Check back soon!</div>';
         return;
       }
+      // Preload weather for all tour locations
+      if (window.ACTWeather && window.ACTWeather.preloadWeather) {
+        window.ACTWeather.preloadWeather(tours);
+      }
       var html = '';
       var count = Math.min(tours.length, 4);
       for (var i = 0; i < count; i++) {

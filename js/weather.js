@@ -4,6 +4,10 @@ window.ACTWeather = (function () {
   var FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
   var GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 
+  // Weather cache: key = "lat,lon", value = { data, ts }
+  var weatherCache = {};
+  var CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
   var WMO_CODES = {
     0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
     45: 'Foggy', 48: 'Depositing rime fog',
@@ -47,6 +51,12 @@ window.ACTWeather = (function () {
   }
 
   async function getForecast(lat, lon) {
+    var cacheKey = lat.toFixed(2) + ',' + lon.toFixed(2);
+    var cached = weatherCache[cacheKey];
+    if (cached && Date.now() - cached.ts < CACHE_TTL) {
+      return cached.data;
+    }
+
     var params =
       'latitude=' + lat +
       '&longitude=' + lon +
@@ -55,9 +65,11 @@ window.ACTWeather = (function () {
       '&timezone=auto&forecast_days=14';
     try {
       var res = await fetch(FORECAST_URL + '?' + params);
-      return await res.json();
+      var data = await res.json();
+      weatherCache[cacheKey] = { data: data, ts: Date.now() };
+      return data;
     } catch (e) {
-      return null;
+      return cached ? cached.data : null;
     }
   }
 
@@ -69,7 +81,7 @@ window.ACTWeather = (function () {
   }
 
   function formatDaily(data, days) {
-    days = days || 3;
+    days = days || 14;
     if (!data || !data.daily) return '';
     var d = data.daily;
     var lines = [];
@@ -88,7 +100,7 @@ window.ACTWeather = (function () {
   function summarizeForPrompt(data, locationName) {
     if (!data) return '';
     var loc = locationName ? 'Weather for ' + locationName : 'Weather';
-    return loc + ':\n' + formatCurrent(data) + '\n' + formatDaily(data, 5);
+    return loc + ':\n' + formatCurrent(data) + '\n' + formatDaily(data, 14);
   }
 
   async function getTourLocationsWeather(tours) {
@@ -108,6 +120,28 @@ window.ACTWeather = (function () {
       }
     }
     return results.length ? results.join('\n\n') : '';
+  }
+
+  // Preload weather for all tour locations on page load
+  async function preloadWeather(tours) {
+    if (!tours || !tours.length) return;
+    var seen = {};
+    var promises = [];
+    for (var i = 0; i < tours.length; i++) {
+      var loc = tours[i].location;
+      if (!loc || seen[loc]) continue;
+      seen[loc] = true;
+      promises.push((function(location) {
+        return geocode(location).then(function(coords) {
+          if (coords) {
+            return getForecast(coords.lat, coords.lon);
+          }
+          return null;
+        });
+      })(loc));
+    }
+    // Wait for all to complete (don't block on errors)
+    await Promise.allSettled(promises);
   }
 
   function packingAdvice(weather, tourCategory, durationHours) {
@@ -194,6 +228,7 @@ window.ACTWeather = (function () {
     getTourLocationsWeather: getTourLocationsWeather,
     getUserLocationWeather: getUserLocationWeather,
     extractLocationFromMessage: extractLocationFromMessage,
+    preloadWeather: preloadWeather,
     packingAdvice: packingAdvice,
     describeWMO: describeWMO
   };
