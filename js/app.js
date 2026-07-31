@@ -603,6 +603,14 @@ window.ACTApp = (function () {
         } catch (e) {}
       }
 
+      // Include weather for any user-mentioned location
+      try {
+        var userMentionedWeather = await window.ACTWeather.getUserLocationWeather(text);
+        if (userMentionedWeather) {
+          context += '\n\n' + userMentionedWeather;
+        }
+      } catch (e) {}
+
       context += '\n\nINSTRUCTIONS: Answer the user question above using the tour database and company information provided. Use weather data when relevant to give personalised recommendations. Be specific — quote prices, durations, meeting points, and special offers where applicable. If the user asks about packing or what to bring, recommend items based on the tour type and weather forecast.';
 
       var html = await window.ACTGemini.generateResponse(text, state.history.slice(), context);

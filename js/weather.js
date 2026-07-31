@@ -52,7 +52,7 @@ window.ACTWeather = (function () {
       '&longitude=' + lon +
       '&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weathercode,windspeed_10m_max,winddirection_10m_dominant,sunrise,sunset' +
       '&current=temperature_2m,weathercode,wind_speed_10m,apparent_temperature,precipitation' +
-      '&timezone=auto&forecast_days=7';
+      '&timezone=auto&forecast_days=14';
     try {
       var res = await fetch(FORECAST_URL + '?' + params);
       return await res.json();
@@ -141,6 +141,50 @@ window.ACTWeather = (function () {
     return tips;
   }
 
+  // Extract potential location names from user message
+  // Looks for capitalized words that might be place names
+  function extractLocationFromMessage(message) {
+    if (!message || typeof message !== 'string') return null;
+
+    // Common Irish and tourist location patterns
+    var locationPatterns = [
+      // Two-word Irish place names (e.g., "Co. Clare", "Co. Galway", "Co. Mayo")
+      /(?:Co\.?\s+)?(?:Clare|Galway|Mayo|Sligo|Donegal|Kerry|Cork|Limerick|Tipperary|Waterford|Wexford|Wicklow|Meath|Louth|Cavan|Monaghan|Leitrim|Roscommon|Longford|Westmeath|Offaly|Laois|Kilkenny|Carlow|Dublin)/i,
+      // Specific well-known locations
+      /(?:Cliffs?\s+of\s+)?Moher/i,
+      /(?:Connemara|Achill|Aran|Inish|Doolin|Kilkee|Killary|Burren|Croagh\s+Patrick|Westport|Clifden|Letterfrack|Leenane|Roundstone|Kinvara|Spiddal|Renvyle|Ballyvaughan|Louisburgh|Delphi|Ballycroy|Fanore|Kilbaha|Murrisk|Cleggan|Roonagh|Salthill|Galway\s+City|Galway\s+Bay)/i,
+      // General location pattern: capitalized word(s) that aren't common English words
+      /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b/
+    ];
+
+    for (var i = 0; i < locationPatterns.length; i++) {
+      var match = message.match(locationPatterns[i]);
+      if (match) {
+        return match[0];
+      }
+    }
+
+    return null;
+  }
+
+  // Fetch weather for a user-mentioned location
+  async function getUserLocationWeather(message) {
+    var locationName = extractLocationFromMessage(message);
+    if (!locationName) return '';
+
+    try {
+      var coords = await geocode(locationName + ', Ireland');
+      if (!coords) return '';
+
+      var forecast = await getForecast(coords.lat, coords.lon);
+      if (!forecast) return '';
+
+      return summarizeForPrompt(forecast, locationName);
+    } catch (e) {
+      return '';
+    }
+  }
+
   return {
     geocode: geocode,
     getForecast: getForecast,
@@ -148,6 +192,7 @@ window.ACTWeather = (function () {
     formatDaily: formatDaily,
     summarizeForPrompt: summarizeForPrompt,
     getTourLocationsWeather: getTourLocationsWeather,
+    getUserLocationWeather: getUserLocationWeather,
     packingAdvice: packingAdvice,
     describeWMO: describeWMO
   };
