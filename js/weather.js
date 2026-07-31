@@ -50,6 +50,39 @@ window.ACTWeather = (function () {
     return null;
   }
 
+  // Try geocoding with progressively broader location names
+  // e.g., "Doolin Pier car park" → "Doolin" → "Co. Clare"
+  async function geocodeWithFallback(locationName) {
+    if (!locationName) return null;
+
+    // Try exact location first
+    var result = await geocode(locationName + ', Ireland');
+    if (result) return result;
+
+    // Extract town/city name (first word or two)
+    var parts = locationName.split(/[\s,]+/);
+    if (parts.length > 1) {
+      var town = parts[0] + (parts[1] && parts[1].length > 2 ? ' ' + parts[1] : '');
+      result = await geocode(town + ', Ireland');
+      if (result) return result;
+    }
+
+    // Try just the first word
+    if (parts[0].length > 2) {
+      result = await geocode(parts[0] + ', Ireland');
+      if (result) return result;
+    }
+
+    // Try county if mentioned (e.g., "Co. Clare", "County Galway")
+    var countyMatch = locationName.match(/(?:co\.?|county)\s+(\w+)/i);
+    if (countyMatch) {
+      result = await geocode('Co. ' + countyMatch[1] + ', Ireland');
+      if (result) return result;
+    }
+
+    return null;
+  }
+
   async function getForecast(lat, lon) {
     var cacheKey = lat.toFixed(2) + ',' + lon.toFixed(2);
     var cached = weatherCache[cacheKey];
@@ -221,6 +254,7 @@ window.ACTWeather = (function () {
 
   return {
     geocode: geocode,
+    geocodeWithFallback: geocodeWithFallback,
     getForecast: getForecast,
     formatCurrent: formatCurrent,
     formatDaily: formatDaily,

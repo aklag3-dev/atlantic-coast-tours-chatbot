@@ -635,10 +635,10 @@ window.ACTApp = (function () {
           // Try to extract a starting location from the user's message
           var mentionedLoc = window.ACTWeather.extractLocationFromMessage(text);
           if (mentionedLoc) {
-            var coords = await window.ACTWeather.geocode(mentionedLoc + ', Ireland');
+            var coords = await window.ACTWeather.geocodeWithFallback(mentionedLoc);
             if (coords) {
               startCoords = { lon: coords.lon, lat: coords.lat };
-              startLabel = mentionedLoc;
+              startLabel = coords.name || mentionedLoc;
             }
           }
         }
@@ -649,17 +649,19 @@ window.ACTApp = (function () {
           for (var ti = 0; ti < tourCount; ti++) {
             var tour = state.tours[ti];
             if (!tour.meeting_point) continue;
-            var mpCoords = await window.ACTWeather.geocode(tour.meeting_point + ', Ireland');
+            var mpCoords = await window.ACTWeather.geocodeWithFallback(tour.meeting_point);
             if (mpCoords) {
               var dist = await window.ACTDistance.getDistance(
                 startCoords.lon, startCoords.lat,
                 mpCoords.lon, mpCoords.lat
               );
               if (dist) {
+                var fallbackNote = mpCoords.name !== tour.meeting_point ? mpCoords.name : null;
                 distances.push({
                   label: tour.tour_name + ' (' + tour.meeting_point + ')',
                   distance_formatted: dist.distance_formatted,
-                  duration_formatted: dist.duration_formatted
+                  duration_formatted: dist.duration_formatted,
+                  fallback: fallbackNote
                 });
               }
             }

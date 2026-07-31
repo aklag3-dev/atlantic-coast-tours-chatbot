@@ -55,10 +55,11 @@ window.ACTDistance = (function () {
   function formatDistanceContext(distances) {
     if (!distances || !distances.length) return '';
     var lines = [];
-    lines.push('DRIVING DISTANCES FROM USER LOCATION:');
+    lines.push('DRIVING DISTANCES FROM USER LOCATION (estimates — confirm with map app for exact times and traffic):');
     for (var i = 0; i < distances.length; i++) {
       var d = distances[i];
-      lines.push('  ' + d.label + ': ' + d.distance_formatted + ' (' + d.duration_formatted + ' drive)');
+      var note = d.fallback ? ' (via ' + d.fallback + ')' : '';
+      lines.push('  ' + d.label + note + ': ' + d.distance_formatted + ' (' + d.duration_formatted + ' drive)');
     }
     return lines.join('\n');
   }
